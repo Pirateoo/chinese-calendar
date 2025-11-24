@@ -13,6 +13,17 @@
 pip install chinesecalendar
 ```
 
+### 本地开发/测试
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e .
+pip install -U pytest pytest-cov
+pytest
+```
+
 ## 升级
 
 ```

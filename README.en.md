@@ -14,6 +14,17 @@ Support 2004 ~ 2026.
 pip install chinesecalendar
 ```
 
+### Local development/testing
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e .
+pip install -U pytest pytest-cov
+pytest
+```
+
 ## Upgrade
 
 ```
