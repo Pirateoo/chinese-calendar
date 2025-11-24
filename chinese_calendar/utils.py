@@ -69,6 +69,63 @@ def is_workday(date):
     return bool(date in workdays.keys() or (weekday <= 4 and date not in holidays.keys()))
 
 
+def is_interbank_trading_day(date):
+    """
+    check if one date is trading day in China Interbank Market.
+    Interbank markets follow the nationwide working-day calendar,
+    including weekend make-up working days.
+
+    :type date: datetime.date | datetime.datetime
+    :rtype: bool
+    """
+    date = _validate_date(date)
+
+    return is_workday(date)
+
+
+def is_a_share_trading_day(date):
+    """
+    check if one date is trading day in China A-share stock market.
+    A-share market trading days must be regular working days that fall on weekdays.
+    (Weekend make-up working days are not treated as trading days.)
+
+    :type date: datetime.date | datetime.datetime
+    :rtype: bool
+    """
+    date = _validate_date(date)
+
+    return is_workday(date) and date.weekday() < 5
+
+
+def get_interbank_trading_days(start, end):
+    """
+    get interbank trading days between start date and end date. (includes start date and end date)
+
+    Interbank trading days follow the nationwide working-day calendar, including weekend make-up
+    working days.
+
+    :type start: datetime.date | datetime.datetime
+    :type end:  datetime.date | datetime.datetime
+    :rtype: list[datetime.date]
+    """
+    start, end = _validate_date(start, end)
+    return list(filter(is_interbank_trading_day, get_dates(start, end)))
+
+
+def get_a_share_trading_days(start, end):
+    """
+    get A-share stock market trading days between start date and end date. (includes start date and end date)
+
+    A-share trading days only include weekday working days. Weekend make-up working days are excluded.
+
+    :type start: datetime.date | datetime.datetime
+    :type end:  datetime.date | datetime.datetime
+    :rtype: list[datetime.date]
+    """
+    start, end = _validate_date(start, end)
+    return list(filter(is_a_share_trading_day, get_dates(start, end)))
+
+
 def is_in_lieu(date):
     """
     check if one date is in lieu in China.

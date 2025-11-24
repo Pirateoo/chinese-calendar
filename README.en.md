@@ -44,6 +44,36 @@ assert holiday_name == calendar.Holiday.labour_day.value
 import chinese_calendar
 assert chinese_calendar.is_in_lieu(datetime.date(2006, 2, 1)) is False
 assert chinese_calendar.is_in_lieu(datetime.date(2006, 2, 2)) is True
+
+# New: interbank & A-share trading day helpers
+assert chinese_calendar.is_interbank_trading_day(datetime.date(2018, 2, 11)) is True  # weekend make-up day is open
+assert chinese_calendar.is_a_share_trading_day(datetime.date(2018, 2, 11)) is False    # A-share trades Mon-Fri only
+assert chinese_calendar.get_interbank_trading_days(datetime.date(2018, 2, 10), datetime.date(2018, 2, 12)) == [
+    datetime.date(2018, 2, 11),
+    datetime.date(2018, 2, 12),
+]
+assert chinese_calendar.get_a_share_trading_days(datetime.date(2018, 2, 10), datetime.date(2018, 2, 12)) == [
+    datetime.date(2018, 2, 12),
+]
+```
+
+### Network API service
+
+You can run the built-in HTTP server to expose the checks as an API that supports multiple dates or
+date ranges:
+
+```bash
+python -m chinese_calendar.api
+```
+
+Example requests:
+
+```bash
+curl "http://127.0.0.1:8000/api/a-share/trading-days?start=2018-02-10&end=2018-02-12"           # per-day flags
+curl "http://127.0.0.1:8000/api/interbank/trading-days?dates=2018-02-11&dates=2018-05-01"       # per-day flags
+curl "http://127.0.0.1:8000/api/interbank/trading-days/list?start=2018-02-10&end=2018-02-12"    # list of trading days
+curl "http://127.0.0.1:8000/api/workdays/range?start=2018-02-10&end=2018-02-12&include_weekends=false"
+curl "http://127.0.0.1:8000/api/holiday/detail?dates=2018-02-11&dates=2018-05-01"
 ```
 
 ## Other Languages
