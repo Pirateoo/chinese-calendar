@@ -26,6 +26,9 @@ def generate_constants():
         "\n".join(_get_lines(arrangement.workdays)),
         "\n".join(_get_lines(arrangement.in_lieu_days)),
     )
+    newline = os.linesep
+    if newline != "\n":
+        file_content = file_content.replace("\n", newline)
     file_path = _get_constants_file_path()
     with open(file_path, "wb") as f:
         f.write(file_content.encode("utf-8"))

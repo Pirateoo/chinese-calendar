@@ -9,7 +9,11 @@ from .utils import (
     get_holidays,
     get_solar_terms,
     get_workdays,
+    get_a_share_trading_days,
+    get_interbank_trading_days,
+    is_a_share_trading_day,
     is_holiday,
+    is_interbank_trading_day,
     is_in_lieu,
     is_workday,
 )
@@ -21,6 +25,8 @@ __all__ = [
     "in_lieu_days",
     "workdays",
     "is_holiday",
+    "is_interbank_trading_day",
+    "is_a_share_trading_day",
     "is_in_lieu",
     "is_workday",
     "get_holiday_detail",
@@ -28,5 +34,7 @@ __all__ = [
     "get_dates",
     "get_holidays",
     "get_workdays",
+    "get_interbank_trading_days",
+    "get_a_share_trading_days",
     "find_workday",
 ]
