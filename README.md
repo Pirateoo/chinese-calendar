@@ -13,6 +13,17 @@
 pip install chinesecalendar
 ```
 
+### 本地开发/测试
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e .
+pip install -U pytest pytest-cov
+pytest
+```
+
 ## 升级
 
 ```
@@ -44,6 +55,35 @@ assert holiday_name == calendar.Holiday.labour_day.value
 import chinese_calendar
 assert chinese_calendar.is_in_lieu(datetime.date(2006, 2, 1)) is False
 assert chinese_calendar.is_in_lieu(datetime.date(2006, 2, 2)) is True
+
+# 新增：判断银行间和 A 股市场的交易日
+assert chinese_calendar.is_interbank_trading_day(datetime.date(2018, 2, 11)) is True  # 周日调休也开市
+assert chinese_calendar.is_a_share_trading_day(datetime.date(2018, 2, 11)) is False    # A 股仅限周一至周五
+assert chinese_calendar.get_interbank_trading_days(datetime.date(2018, 2, 10), datetime.date(2018, 2, 12)) == [
+    datetime.date(2018, 2, 11),
+    datetime.date(2018, 2, 12),
+]
+assert chinese_calendar.get_a_share_trading_days(datetime.date(2018, 2, 10), datetime.date(2018, 2, 12)) == [
+    datetime.date(2018, 2, 12),
+]
+```
+
+### 网络 API 服务
+
+安装完库后，可以直接启动内置 HTTP 服务，为多日期或日期区间提供判断接口：
+
+```bash
+python -m chinese_calendar.api
+```
+
+示例请求：
+
+```bash
+curl "http://127.0.0.1:8000/api/a-share/trading-days?start=2018-02-10&end=2018-02-12"           # 每日结果
+curl "http://127.0.0.1:8000/api/interbank/trading-days?dates=2018-02-11&dates=2018-05-01"       # 每日结果
+curl "http://127.0.0.1:8000/api/interbank/trading-days/list?start=2018-02-10&end=2018-02-12"    # 区间交易日列表
+curl "http://127.0.0.1:8000/api/workdays/range?start=2018-02-10&end=2018-02-12&include_weekends=false"
+curl "http://127.0.0.1:8000/api/holiday/detail?dates=2018-02-11&dates=2018-05-01"
 ```
 
 ## 其它语言
