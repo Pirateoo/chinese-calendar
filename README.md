@@ -76,6 +76,14 @@ assert chinese_calendar.get_a_share_trading_days(datetime.date(2018, 2, 10), dat
 python -m chinese_calendar.api
 ```
 
+或者使用容器一键启动服务：
+
+```bash
+docker compose up --build -d
+```
+
+服务默认监听 8000 端口，可通过环境变量 `CHINESE_CALENDAR_PORT` 覆盖。
+
 示例请求：
 
 ```bash

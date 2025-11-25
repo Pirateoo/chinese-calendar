@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import datetime
 import json
+import os
 import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -62,26 +63,6 @@ def _flag_handler(func: Callable[[datetime.date], bool], key: str) -> Callable[[
         return {"results": [{"date": date.isoformat(), key: func(date)} for date in dates]}
 
     return handler
-
-
-def _interbank_handler(query: Dict[str, List[str]]):
-    dates = _collect_dates(query.get("dates"), query.get("start", [None])[0], query.get("end", [None])[0])
-    return {
-        "results": [
-            {"date": date.isoformat(), "is_interbank_trading_day": is_interbank_trading_day(date)}
-            for date in dates
-        ]
-    }
-
-
-def _a_share_handler(query: Dict[str, List[str]]):
-    dates = _collect_dates(query.get("dates"), query.get("start", [None])[0], query.get("end", [None])[0])
-    return {
-        "results": [
-            {"date": date.isoformat(), "is_a_share_trading_day": is_a_share_trading_day(date)}
-            for date in dates
-        ]
-    }
 
 
 def _holiday_detail_handler(query: Dict[str, List[str]]):
@@ -156,8 +137,10 @@ class _CalendarRequestHandler(BaseHTTPRequestHandler):
         "/api/date/type": _type_check_handler,
         "/api/holidays/range": _range_list_handler(get_holidays, "holidays", include_weekends_supported=True),
         "/api/workdays/range": _range_list_handler(get_workdays, "workdays", include_weekends_supported=True),
-        "/api/interbank/trading-days": _interbank_handler,
-        "/api/a-share/trading-days": _a_share_handler,
+        "/api/interbank/trading-days": _flag_handler(
+            is_interbank_trading_day, "is_interbank_trading_day"
+        ),
+        "/api/a-share/trading-days": _flag_handler(is_a_share_trading_day, "is_a_share_trading_day"),
         "/api/interbank/trading-days/list": _range_list_handler(
             get_interbank_trading_days, "interbank_trading_days"
         ),
@@ -197,6 +180,8 @@ def create_server(host: str = "0.0.0.0", port: int = 8000) -> ThreadingHTTPServe
 
 def run(host: str = "0.0.0.0", port: int = 8000):
     """Run the API service with the built-in HTTP server."""
+    host = os.getenv("CHINESE_CALENDAR_HOST", host)
+    port = int(os.getenv("CHINESE_CALENDAR_PORT", port))
     server = create_server(host, port)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

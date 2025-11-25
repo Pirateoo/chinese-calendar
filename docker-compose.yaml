@@ -1,0 +1,10 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      CHINESE_CALENDAR_HOST: 0.0.0.0
+      CHINESE_CALENDAR_PORT: 8000
+    command: ["python", "-m", "chinese_calendar.api"]

@@ -77,6 +77,14 @@ date ranges:
 python -m chinese_calendar.api
 ```
 
+You can also launch the API with Docker in one command:
+
+```bash
+docker compose up --build -d
+```
+
+The service listens on port 8000 by default and honors the `CHINESE_CALENDAR_PORT` environment variable.
+
 Example requests:
 
 ```bash
