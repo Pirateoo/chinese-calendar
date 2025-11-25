@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 import datetime
 import json
+import os
 import threading
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -23,6 +24,15 @@ from chinese_calendar.utils import (
     is_interbank_trading_day,
     is_workday,
 )
+
+
+TYPE_CHECKERS: Dict[str, Callable[[datetime.date], bool]] = {
+    "holiday": is_holiday,
+    "workday": is_workday,
+    "in-lieu": is_in_lieu,
+    "interbank-trading-day": is_interbank_trading_day,
+    "a-share-trading-day": is_a_share_trading_day,
+}
 
 
 def _parse_date(value: str) -> datetime.date:
@@ -55,26 +65,6 @@ def _flag_handler(func: Callable[[datetime.date], bool], key: str) -> Callable[[
     return handler
 
 
-def _interbank_handler(query: Dict[str, List[str]]):
-    dates = _collect_dates(query.get("dates"), query.get("start", [None])[0], query.get("end", [None])[0])
-    return {
-        "results": [
-            {"date": date.isoformat(), "is_interbank_trading_day": is_interbank_trading_day(date)}
-            for date in dates
-        ]
-    }
-
-
-def _a_share_handler(query: Dict[str, List[str]]):
-    dates = _collect_dates(query.get("dates"), query.get("start", [None])[0], query.get("end", [None])[0])
-    return {
-        "results": [
-            {"date": date.isoformat(), "is_a_share_trading_day": is_a_share_trading_day(date)}
-            for date in dates
-        ]
-    }
-
-
 def _holiday_detail_handler(query: Dict[str, List[str]]):
     dates = _collect_dates(query.get("dates"), query.get("start", [None])[0], query.get("end", [None])[0])
     results = []
@@ -82,6 +72,25 @@ def _holiday_detail_handler(query: Dict[str, List[str]]):
         is_holiday_flag, name = get_holiday_detail(date)
         results.append({"date": date.isoformat(), "is_holiday": is_holiday_flag, "holiday_name": name})
     return {"results": results}
+
+
+def _type_check_handler(query: Dict[str, List[str]]):
+    date_value = query.get("date", [None])[0]
+    if not date_value:
+        raise ValueError("'date' query parameter is required for this endpoint.")
+
+    type_value = query.get("type", [None])[0]
+    if not type_value:
+        raise ValueError("'type' query parameter is required for this endpoint.")
+
+    try:
+        checker = TYPE_CHECKERS[type_value]
+    except KeyError:
+        supported = ", ".join(sorted(TYPE_CHECKERS.keys()))
+        raise ValueError(f"Unknown type '{type_value}'. Supported types: {supported}.")
+
+    date = _parse_date(date_value)
+    return {"date": date.isoformat(), "type": type_value, "result": checker(date)}
 
 
 def _parse_bool(value: Optional[str], default: bool = True) -> bool:
@@ -125,10 +134,13 @@ class _CalendarRequestHandler(BaseHTTPRequestHandler):
         "/api/holidays": _flag_handler(is_holiday, "is_holiday"),
         "/api/in-lieu": _flag_handler(is_in_lieu, "is_in_lieu"),
         "/api/holiday/detail": _holiday_detail_handler,
+        "/api/date/type": _type_check_handler,
         "/api/holidays/range": _range_list_handler(get_holidays, "holidays", include_weekends_supported=True),
         "/api/workdays/range": _range_list_handler(get_workdays, "workdays", include_weekends_supported=True),
-        "/api/interbank/trading-days": _interbank_handler,
-        "/api/a-share/trading-days": _a_share_handler,
+        "/api/interbank/trading-days": _flag_handler(
+            is_interbank_trading_day, "is_interbank_trading_day"
+        ),
+        "/api/a-share/trading-days": _flag_handler(is_a_share_trading_day, "is_a_share_trading_day"),
         "/api/interbank/trading-days/list": _range_list_handler(
             get_interbank_trading_days, "interbank_trading_days"
         ),
@@ -168,6 +180,8 @@ def create_server(host: str = "0.0.0.0", port: int = 8000) -> ThreadingHTTPServe
 
 def run(host: str = "0.0.0.0", port: int = 8000):
     """Run the API service with the built-in HTTP server."""
+    host = os.getenv("CHINESE_CALENDAR_HOST", host)
+    port = int(os.getenv("CHINESE_CALENDAR_PORT", port))
     server = create_server(host, port)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()

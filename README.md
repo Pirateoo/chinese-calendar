@@ -76,6 +76,14 @@ assert chinese_calendar.get_a_share_trading_days(datetime.date(2018, 2, 10), dat
 python -m chinese_calendar.api
 ```
 
+或者使用容器一键启动服务：
+
+```bash
+docker compose up --build -d
+```
+
+服务默认监听 8000 端口，可通过环境变量 `CHINESE_CALENDAR_PORT` 覆盖。
+
 示例请求：
 
 ```bash
@@ -84,6 +92,7 @@ curl "http://127.0.0.1:8000/api/interbank/trading-days?dates=2018-02-11&dates=20
 curl "http://127.0.0.1:8000/api/interbank/trading-days/list?start=2018-02-10&end=2018-02-12"    # 区间交易日列表
 curl "http://127.0.0.1:8000/api/workdays/range?start=2018-02-10&end=2018-02-12&include_weekends=false"
 curl "http://127.0.0.1:8000/api/holiday/detail?dates=2018-02-11&dates=2018-05-01"
+curl "http://127.0.0.1:8000/api/date/type?date=2018-02-16&type=holiday"                           # 单日判断某类型（返回 true/false）
 ```
 
 ## 其它语言

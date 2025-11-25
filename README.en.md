@@ -77,6 +77,14 @@ date ranges:
 python -m chinese_calendar.api
 ```
 
+You can also launch the API with Docker in one command:
+
+```bash
+docker compose up --build -d
+```
+
+The service listens on port 8000 by default and honors the `CHINESE_CALENDAR_PORT` environment variable.
+
 Example requests:
 
 ```bash
@@ -85,6 +93,7 @@ curl "http://127.0.0.1:8000/api/interbank/trading-days?dates=2018-02-11&dates=20
 curl "http://127.0.0.1:8000/api/interbank/trading-days/list?start=2018-02-10&end=2018-02-12"    # list of trading days
 curl "http://127.0.0.1:8000/api/workdays/range?start=2018-02-10&end=2018-02-12&include_weekends=false"
 curl "http://127.0.0.1:8000/api/holiday/detail?dates=2018-02-11&dates=2018-05-01"
+curl "http://127.0.0.1:8000/api/date/type?date=2018-02-16&type=holiday"                           # true/false for a given type
 ```
 
 ## Other Languages
