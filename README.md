@@ -84,6 +84,7 @@ curl "http://127.0.0.1:8000/api/interbank/trading-days?dates=2018-02-11&dates=20
 curl "http://127.0.0.1:8000/api/interbank/trading-days/list?start=2018-02-10&end=2018-02-12"    # 区间交易日列表
 curl "http://127.0.0.1:8000/api/workdays/range?start=2018-02-10&end=2018-02-12&include_weekends=false"
 curl "http://127.0.0.1:8000/api/holiday/detail?dates=2018-02-11&dates=2018-05-01"
+curl "http://127.0.0.1:8000/api/date/type?date=2018-02-16&type=holiday"                           # 单日判断某类型（返回 true/false）
 ```
 
 ## 其它语言

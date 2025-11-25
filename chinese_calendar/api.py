@@ -25,6 +25,15 @@ from chinese_calendar.utils import (
 )
 
 
+TYPE_CHECKERS: Dict[str, Callable[[datetime.date], bool]] = {
+    "holiday": is_holiday,
+    "workday": is_workday,
+    "in-lieu": is_in_lieu,
+    "interbank-trading-day": is_interbank_trading_day,
+    "a-share-trading-day": is_a_share_trading_day,
+}
+
+
 def _parse_date(value: str) -> datetime.date:
     try:
         return datetime.date.fromisoformat(value)
@@ -84,6 +93,25 @@ def _holiday_detail_handler(query: Dict[str, List[str]]):
     return {"results": results}
 
 
+def _type_check_handler(query: Dict[str, List[str]]):
+    date_value = query.get("date", [None])[0]
+    if not date_value:
+        raise ValueError("'date' query parameter is required for this endpoint.")
+
+    type_value = query.get("type", [None])[0]
+    if not type_value:
+        raise ValueError("'type' query parameter is required for this endpoint.")
+
+    try:
+        checker = TYPE_CHECKERS[type_value]
+    except KeyError:
+        supported = ", ".join(sorted(TYPE_CHECKERS.keys()))
+        raise ValueError(f"Unknown type '{type_value}'. Supported types: {supported}.")
+
+    date = _parse_date(date_value)
+    return {"date": date.isoformat(), "type": type_value, "result": checker(date)}
+
+
 def _parse_bool(value: Optional[str], default: bool = True) -> bool:
     if value is None:
         return default
@@ -125,6 +153,7 @@ class _CalendarRequestHandler(BaseHTTPRequestHandler):
         "/api/holidays": _flag_handler(is_holiday, "is_holiday"),
         "/api/in-lieu": _flag_handler(is_in_lieu, "is_in_lieu"),
         "/api/holiday/detail": _holiday_detail_handler,
+        "/api/date/type": _type_check_handler,
         "/api/holidays/range": _range_list_handler(get_holidays, "holidays", include_weekends_supported=True),
         "/api/workdays/range": _range_list_handler(get_workdays, "workdays", include_weekends_supported=True),
         "/api/interbank/trading-days": _interbank_handler,
