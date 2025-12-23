@@ -11,3 +11,7 @@ MANIFEST
 /env/
 
 *.egg-info/
+
+.github
+.pytest_cache
+.venv
